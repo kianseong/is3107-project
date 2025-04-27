@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import os
 from dotenv import load_dotenv
 
@@ -11,11 +11,11 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', 'mysql'),
-    'user': os.getenv('MYSQL_USER', 'airflow'),
-    'password': os.getenv('MYSQL_PASSWORD', 'airflow'),
-    'database': os.getenv('DB_NAME', 'amazon_products'),
-    'port': int(os.getenv('MYSQL_PORT', '3306'))
+    'host': 'mysql',  # Use the Docker service name
+    'user': 'airflow',
+    'password': 'airflow',
+    'database': 'amazon_products',
+    'port': 3306
 }
 
 # Create database connection
@@ -40,7 +40,9 @@ page = st.sidebar.radio("Go to", ["Overview", "Category Analysis", "Price Analys
 # Helper function to load data
 def load_data(table_name):
     try:
-        return pd.read_sql(f"SELECT * FROM {table_name}", engine)
+        with engine.connect() as connection:
+            result = connection.execute(text(f"SELECT * FROM {table_name}"))
+            return pd.DataFrame(result.fetchall(), columns=result.keys())
     except Exception as e:
         st.error(f"Error loading data from {table_name}: {str(e)}")
         return pd.DataFrame()
