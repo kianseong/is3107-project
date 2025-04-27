@@ -99,8 +99,8 @@ def amazon_products_etl():
             processed_chunks = []
             
             for chunk in chunks:
-                # Add ID column
-                chunk['id'] = range(1, len(chunk) + 1)
+                # Drop duplicates first
+                chunk = chunk.drop_duplicates(subset=['name', 'discount_price', 'actual_price', 'ratings', 'no_of_ratings'], keep="first")
                 
                 # Drop rows with missing values
                 chunk.dropna(subset=['ratings', 'no_of_ratings', 'discount_price', 'actual_price'], inplace=True)
@@ -126,6 +126,9 @@ def amazon_products_etl():
                     chunk[col] = chunk[col].str.strip()
                     chunk[col] = chunk[col].str.replace("'", "''")  # Escape single quotes
                 
+                # Add ID column
+                chunk['id'] = range(1, len(chunk) + 1)
+                
                 processed_chunks.append(chunk)
             
             # Combine all processed chunks
@@ -133,6 +136,14 @@ def amazon_products_etl():
             
             # Drop any remaining rows with NaN values
             final_df = final_df.dropna()
+            
+            # Drop duplicates based on all columns except 'id'
+            final_df = final_df.drop_duplicates(subset=['name', 'main_category', 'sub_category', 
+                                                      'discount_price', 'actual_price', 
+                                                      'ratings', 'no_of_ratings'])
+            
+            # Reset the ID column after dropping duplicates
+            final_df['id'] = range(1, len(final_df) + 1)
             
             # Save the processed data
             final_df.to_csv(csv_file_path, index=False)
