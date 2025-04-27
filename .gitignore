@@ -24,7 +24,6 @@ wheels/
 # Airflow
 airflow.cfg
 airflow.db
-logs/
 dags/*.pyc
 
 # Environment variables

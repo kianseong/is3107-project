@@ -16,8 +16,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create necessary directories
-RUN mkdir -p /opt/airflow/dags /opt/airflow/logs /opt/airflow/data
+RUN mkdir -p /opt/airflow/dags /opt/airflow/data
 
 # Copy DAGs and other files
-COPY dags /opt/airflow/dags
-COPY logs /opt/airflow/logs 
+COPY dags /opt/airflow/dags 
