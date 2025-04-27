@@ -35,7 +35,7 @@ st.title("Amazon Products Analysis Dashboard")
 
 # Sidebar
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Overview", "Category Analysis", "Price Analysis", "Rating Analysis", "Time Series"])
+page = st.sidebar.radio("Go to", ["Overview", "Category Analysis", "Price Analysis", "Rating Analysis"])
 
 # Helper function to load data
 def load_data(table_name):
@@ -76,8 +76,34 @@ if page == "Overview":
             title="Top 10 Categories"
         )
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Category performance metrics
+        st.subheader("Category Performance Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.scatter(
+                category_analysis,
+                x='avg_price',
+                y='avg_rating',
+                size='product_count',
+                color='main_category',
+                hover_data=['sub_category', 'total_ratings', 'discount_percentage'],
+                title="Price vs Rating by Category"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.scatter(
+                category_analysis,
+                x='avg_ratings_per_product',
+                y='discount_percentage',
+                size='product_count',
+                color='main_category',
+                hover_data=['sub_category', 'avg_price', 'total_ratings'],
+                title="Ratings per Product vs Discount Percentage"
+            )
+            st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("No data available. Please run the Airflow DAG first.")
+        st.warning("No data available. Please run the Airflow DAGs first.")
 
 # Category Analysis page
 elif page == "Category Analysis":
@@ -89,27 +115,71 @@ elif page == "Category Analysis":
     if not category_analysis.empty:
         # Category distribution
         st.subheader("Category Distribution")
-        fig = px.pie(
-            category_analysis,
-            values='product_count',
-            names='main_category',
-            title="Product Distribution by Category"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.pie(
+                category_analysis,
+                values='product_count',
+                names='main_category',
+                title="Product Distribution by Category"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.bar(
+                category_analysis.sort_values('total_ratings', ascending=False).head(10),
+                x='main_category',
+                y='total_ratings',
+                title="Top 10 Categories by Total Ratings"
+            )
+            st.plotly_chart(fig, use_container_width=True)
         
         # Category metrics
         st.subheader("Category Metrics")
-        fig = px.scatter(
-            category_analysis,
-            x='avg_price',
-            y='avg_rating',
-            size='product_count',
-            color='main_category',
-            title="Price vs Rating by Category"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.scatter(
+                category_analysis,
+                x='avg_price',
+                y='avg_rating',
+                size='product_count',
+                color='main_category',
+                hover_data=['sub_category', 'total_ratings', 'discount_percentage'],
+                title="Price vs Rating by Category"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.scatter(
+                category_analysis,
+                x='price_std',
+                y='rating_std',
+                size='product_count',
+                color='main_category',
+                hover_data=['sub_category', 'avg_price', 'avg_rating'],
+                title="Price Variability vs Rating Variability"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Additional metrics
+        st.subheader("Additional Category Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.bar(
+                category_analysis.sort_values('discount_percentage', ascending=False).head(10),
+                x='main_category',
+                y='discount_percentage',
+                title="Top 10 Categories by Discount Percentage"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.bar(
+                category_analysis.sort_values('rating_price_ratio', ascending=False).head(10),
+                x='main_category',
+                y='rating_price_ratio',
+                title="Top 10 Categories by Rating-Price Ratio"
+            )
+            st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("No data available. Please run the Airflow DAG first.")
+        st.warning("No data available. Please run the Airflow DAGs first.")
 
 # Price Analysis page
 elif page == "Price Analysis":
@@ -121,26 +191,71 @@ elif page == "Price Analysis":
     if not price_analysis.empty:
         # Price distribution
         st.subheader("Price Distribution")
-        fig = px.bar(
-            price_analysis,
-            x='price_range',
-            y='product_count',
-            title="Product Count by Price Range"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.bar(
+                price_analysis,
+                x='price_range',
+                y='product_count',
+                title="Product Count by Price Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.bar(
+                price_analysis,
+                x='price_range',
+                y='total_ratings',
+                title="Total Ratings by Price Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
         
-        # Price vs Rating
-        st.subheader("Price vs Rating")
-        fig = px.scatter(
-            price_analysis,
-            x='price_range',
-            y='avg_rating',
-            size='total_ratings',
-            title="Rating Distribution by Price Range"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        # Price metrics
+        st.subheader("Price Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.scatter(
+                price_analysis,
+                x='avg_price',
+                y='avg_rating',
+                size='product_count',
+                color='price_range',
+                hover_data=['total_ratings', 'discount_percentage'],
+                title="Price vs Rating by Price Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.scatter(
+                price_analysis,
+                x='price_std',
+                y='rating_std',
+                size='product_count',
+                color='price_range',
+                hover_data=['avg_price', 'avg_rating'],
+                title="Price Variability vs Rating Variability"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Additional metrics
+        st.subheader("Additional Price Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.bar(
+                price_analysis,
+                x='price_range',
+                y='discount_percentage',
+                title="Discount Percentage by Price Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.bar(
+                price_analysis,
+                x='price_range',
+                y='avg_ratings_per_product',
+                title="Average Ratings per Product by Price Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("No data available. Please run the Airflow DAG first.")
+        st.warning("No data available. Please run the Airflow DAGs first.")
 
 # Rating Analysis page
 elif page == "Rating Analysis":
@@ -152,60 +267,68 @@ elif page == "Rating Analysis":
     if not rating_analysis.empty:
         # Rating distribution
         st.subheader("Rating Distribution")
-        fig = px.bar(
-            rating_analysis,
-            x='rating_range',
-            y='product_count',
-            title="Product Count by Rating Range"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Rating vs Price
-        st.subheader("Rating vs Price")
-        fig = px.scatter(
-            rating_analysis,
-            x='rating_range',
-            y='avg_price',
-            size='total_ratings',
-            title="Price Distribution by Rating Range"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No data available. Please run the Airflow DAG first.")
-
-# Time Series page
-elif page == "Time Series":
-    st.header("Time Series Analysis")
-    
-    # Load data
-    time_series = load_data('time_series_analysis')
-    
-    if not time_series.empty:
-        # Time series metrics
-        st.subheader("Time Series Metrics")
-        
-        # Create time series plot
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=time_series['analysis_date'],
-            y=time_series['avg_price'],
-            name="Average Price"
-        ))
-        fig.add_trace(go.Scatter(
-            x=time_series['analysis_date'],
-            y=time_series['avg_rating'],
-            name="Average Rating"
-        ))
-        fig.update_layout(title="Price and Rating Trends Over Time")
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Display metrics
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Products", time_series['total_products'].iloc[-1])
-            st.metric("Average Price", f"${time_series['avg_price'].iloc[-1]:.2f}")
+            fig = px.bar(
+                rating_analysis,
+                x='rating_range',
+                y='product_count',
+                title="Product Count by Rating Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
         with col2:
-            st.metric("Average Rating", f"{time_series['avg_rating'].iloc[-1]:.2f}")
-            st.metric("Total Ratings", f"{time_series['total_ratings'].iloc[-1]:,.0f}")
+            fig = px.bar(
+                rating_analysis,
+                x='rating_range',
+                y='total_ratings',
+                title="Total Ratings by Rating Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Rating metrics
+        st.subheader("Rating Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.scatter(
+                rating_analysis,
+                x='avg_price',
+                y='total_ratings',
+                size='product_count',
+                color='rating_range',
+                hover_data=['avg_ratings_per_product', 'discount_percentage'],
+                title="Price vs Total Ratings by Rating Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.scatter(
+                rating_analysis,
+                x='price_std',
+                y='avg_ratings_per_product',
+                size='product_count',
+                color='rating_range',
+                hover_data=['avg_price', 'total_ratings'],
+                title="Price Variability vs Ratings per Product"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Additional metrics
+        st.subheader("Additional Rating Metrics")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.bar(
+                rating_analysis,
+                x='rating_range',
+                y='discount_percentage',
+                title="Discount Percentage by Rating Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            fig = px.bar(
+                rating_analysis,
+                x='rating_range',
+                y='price_rating_ratio',
+                title="Price-Rating Ratio by Rating Range"
+            )
+            st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("No data available. Please run the Airflow DAG first.") 
+        st.warning("No data available. Please run the Airflow DAGs first.") 

@@ -1,12 +1,27 @@
 # Amazon Products ETL Pipeline
 
-This project implements an ETL (Extract, Transform, Load) pipeline for Amazon products data using Apache Airflow. The pipeline downloads data from Kaggle, processes it, and loads it into a MySQL database.
+This project implements an ETL (Extract, Transform, Load) pipeline for Amazon products data using Apache Airflow and MySQL.
 
 ## Prerequisites
 
-- Docker
-- Docker Compose
-- Kaggle API credentials
+- Python 3.8+
+- Apache Airflow
+- MySQL Server
+- Docker and Docker Compose (for containerized setup)
+
+## Project Structure
+
+```
+.
+├── dags/
+│   └── etl/
+│       ├── preprocess_data.py
+│       └── load_to_mysql.py
+├── data/
+│   └── Amazon-Products.csv
+├── .env
+└── docker-compose.yml
+```
 
 ## Setup
 
@@ -16,92 +31,67 @@ git clone <repository-url>
 cd <repository-name>
 ```
 
-2. Create a `.env` file with your configuration:
+2. Create a `.env` file with the following variables:
+```env
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=password
+MYSQL_DATABASE=airflow
+```
+
+3. Set up MySQL connection in Airflow:
+   - Go to Airflow UI > Admin > Connections
+   - Add a new connection:
+     - Conn Id: `amazon_products_mysql`
+     - Conn Type: `MySQL`
+     - Host: `your-mysql-host`
+     - Schema: `amazon_products`
+     - Login: `your-mysql-username`
+     - Password: `your-mysql-password`
+     - Port: `3306`
+
+## Running the Pipeline
+
+### Using Docker (Recommended)
+
+1. Build and start the containers:
 ```bash
-cp .env.example .env
-# Edit .env with your settings
+docker-compose up -d --build
 ```
 
-3. Set up Kaggle API credentials:
-```bash
-# Create .kaggle directory
-mkdir -p ~/.kaggle
-# Copy your kaggle.json to ~/.kaggle/
-```
+2. Access Airflow UI at `http://localhost:8080`
+   - Default credentials: airflow/airflow
 
-4. Build and start the containers:
-```bash
-docker-compose up -d
-```
+3. Enable the DAGs:
+   - Go to DAGs view
+   - Enable `preprocess_data` and `load_to_mysql` DAGs
 
-5. Initialize the Airflow database:
-```bash
-docker-compose run airflow-webserver airflow db init
-```
+4. Trigger the DAGs:
+   - Click on the DAG
+   - Click "Trigger DAG" button
+   - The pipeline will run in sequence:
+     1. `preprocess_data`: Cleans and prepares the data
+     2. `load_to_mysql`: Loads the processed data into MySQL
 
-6. Create an Airflow user:
-```bash
-docker-compose run airflow-webserver airflow users create \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com \
-    --password admin
-```
-
-## Usage
-
-1. Access the Airflow web interface at http://localhost:8080
-2. Log in with the credentials you created
-3. Enable the `amazon_products_etl` DAG
-4. Trigger the DAG manually or wait for the scheduled run
-
-## Project Structure
-
-```
-.
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-├── .env
-├── .gitignore
-├── README.md
-└── dags/
-    └── amazon_products_etl.py
-```
-
-## Configuration
-
-The following environment variables can be configured in the `.env` file:
-
-- `AIRFLOW_EMAIL`: Email for Airflow notifications
-- `AIRFLOW_RETRIES`: Number of retries for failed tasks
-- `AIRFLOW_RETRY_DELAY`: Delay between retries in minutes
-- `KAGGLE_DATASET_NAME`: Name of the Kaggle dataset
-- `DOWNLOAD_PATH`: Path to store downloaded data
-- `FILE_NAME`: Name of the CSV file
-- `CURRENCY_CONVERSION_RATE`: Rate to convert prices to USD
-- `DB_NAME`: MySQL database name
-- `DB_TABLE`: MySQL table name
+5. Access Streamlit UI at `http://localhost:8501`
 
 ## Monitoring
 
-- Airflow logs can be found in the `logs/` directory
-- Database data is persisted in a Docker volume
-- The Airflow web interface provides task status and logs
+- Check DAG runs in Airflow UI
+- View logs for each task
+- Monitor MySQL database for loaded data
 
 ## Troubleshooting
 
-1. If the DAG fails to start:
-   - Check the Airflow logs
-   - Verify Kaggle API credentials
-   - Ensure MySQL is running
+1. Database Connection Issues:
+   - Verify MySQL connection settings
+   - Check if MySQL server is running
+   - Ensure proper permissions are set
 
-2. If data processing fails:
-   - Check available disk space
-   - Verify file permissions
-   - Check MySQL connection settings
+2. Data Processing Issues:
+   - Check input CSV file format
+   - Verify environment variables
+   - Review task logs in Airflow UI
 
 ## License
 
