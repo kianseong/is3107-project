@@ -60,7 +60,8 @@ docker-compose up -d --build
 ```
 
 2. Access Airflow UI at `http://localhost:8080`
-   - Default credentials: airflow/airflow
+   - Username: `admin`
+   - Password: `admin`
 
 3. Enable the DAGs:
    - Go to DAGs view
