@@ -28,7 +28,6 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
       - ./data:/opt/airflow/data
       - ${HOME}/.config/kaggle:/opt/airflow/.kaggle:ro
     depends_on:
@@ -62,7 +61,6 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
       - ./data:/opt/airflow/data
       - ${HOME}/.config/kaggle:/opt/airflow/.kaggle:ro
     depends_on:
