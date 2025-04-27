@@ -1,0 +1,24 @@
+FROM apache/airflow:2.7.0-python3.11
+
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    default-libmysqlclient-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create necessary directories
+RUN mkdir -p /opt/airflow/dags /opt/airflow/plugins /opt/airflow/logs /opt/airflow/data
+
+# Copy DAGs and other files
+COPY dags /opt/airflow/dags
+COPY plugins /opt/airflow/plugins
+COPY logs /opt/airflow/logs 

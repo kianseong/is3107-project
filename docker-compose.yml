@@ -1,8 +1,8 @@
-version: '3'
-
 services:
   airflow-webserver:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     command: >
       bash -c "
         airflow db init &&
@@ -29,6 +29,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./data:/opt/airflow/data
       - ${HOME}/.config/kaggle:/opt/airflow/.kaggle:ro
     depends_on:
       mysql:
@@ -37,7 +38,9 @@ services:
       - airflow-network
 
   airflow-scheduler:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     command: >
       bash -c "
         python /opt/airflow/dags/setup_connections.py &&
@@ -60,6 +63,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./data:/opt/airflow/data
       - ${HOME}/.config/kaggle:/opt/airflow/.kaggle:ro
     depends_on:
       mysql:
@@ -74,7 +78,6 @@ services:
       - MYSQL_DATABASE=airflow
       - MYSQL_USER=airflow
       - MYSQL_PASSWORD=airflow
-      - MYSQL_ALLOW_EMPTY_PASSWORD=no
     ports:
       - "3306:3306"
     volumes:
@@ -84,12 +87,28 @@ services:
       --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
-      --init-file=/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - airflow-network
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    restart: unless-stopped
     networks:
       - airflow-network
 

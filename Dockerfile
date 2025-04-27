@@ -1,31 +1,21 @@
-FROM apache/airflow:2.7.0
+FROM python:3.11-slim
 
-USER root
+WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        libpq-dev \
-    && apt-get clean \
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    default-libmysqlclient-dev \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-USER airflow
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-COPY requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
+COPY . .
 
-# Set environment variables
-ENV AIRFLOW_HOME=/opt/airflow
-ENV PYTHONPATH=/opt/airflow
-ENV KAGGLE_CONFIG_DIR=/opt/airflow/.kaggle
+EXPOSE 8501
 
-# Create necessary directories
-RUN mkdir -p /opt/airflow/dags /opt/airflow/logs /opt/airflow/plugins /opt/airflow/.kaggle
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-# Copy DAG files
-COPY dags/ /opt/airflow/dags/
-
-# Set the working directory
-WORKDIR /opt/airflow 
+ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"] 
